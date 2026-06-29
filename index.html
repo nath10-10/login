@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Firebase Auth</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      color: #1a1a1a;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #ffffff;
+      border-radius: 14px;
+      border: 1px solid #e5e5e5;
+      padding: 2.25rem 2rem 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    /* ── Logo mark ── */
+    .logo {
+      width: 44px;
+      height: 44px;
+      background: #fff3e0;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      font-size: 22px;
+    }
+
+    h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: #666; margin-bottom: 1.75rem; }
+
+    /* ── Config notice ── */
+    .notice {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: #92400e;
+      margin-bottom: 1.5rem;
+      line-height: 1.55;
+    }
+    .notice strong { display: block; font-weight: 600; margin-bottom: 2px; }
+    .notice a { color: #b45309; }
+    .notice code {
+      background: rgba(0,0,0,0.07);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 11px;
+    }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 1rem; }
+    label { display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 5px; }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px;
+      font-size: 14px;
+      border: 1px solid #d5d5d5;
+      border-radius: 8px;
+      background: #fafafa;
+      color: #1a1a1a;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+      background: #fff;
+    }
+    input::placeholder { color: #aaa; }
+
+    /* ── Error ── */
+    .error {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      border-radius: 7px;
+      padding: 9px 12px;
+      font-size: 13px;
+      color: #b91c1c;
+      margin-top: 0.75rem;
+      display: none;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      width: 100%;
+      height: 40px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: #f97316;
+      color: #fff;
+      margin-top: 1.25rem;
+    }
+    .btn-primary:hover:not(:disabled) { background: #ea6c0a; }
+
+    .btn-google {
+      background: #fff;
+      color: #1a1a1a;
+      border: 1px solid #d5d5d5;
+      margin-top: 0.75rem;
+    }
+    .btn-google:hover { background: #f9f9f9; }
+
+    .btn-danger {
+      background: #fff;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+      margin-top: 1rem;
+    }
+    .btn-danger:hover { background: #fef2f2; }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 1.25rem 0 0.25rem;
+      color: #bbb;
+      font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-top: 1px solid #e8e8e8;
+    }
+
+    /* ── Toggle link ── */
+    .toggle {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 13px;
+      color: #888;
+    }
+    .toggle a {
+      color: #f97316;
+      cursor: pointer;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .toggle a:hover { text-decoration: underline; }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+      display: none;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Dashboard ── */
+    #dashboard { display: none; }
+
+    .avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #fff3e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 600;
+      color: #ea580c;
+      margin: 0 auto 1rem;
+      overflow: hidden;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .user-name {
+      text-align: center;
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .user-email {
+      text-align: center;
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 1.5rem;
+    }
+
+    .info-box {
+      background: #fafafa;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 14px;
+      font-size: 13px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #888; }
+    .info-value { font-weight: 500; color: #1a1a1a; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Google SVG icon */
+    .google-svg { width: 17px; height: 17px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">🔥</div>
+
+  <!-- ─── Login / Register form ─── -->
+  <div id="auth-panel">
+    <h1 id="form-title">Sign in</h1>
+    <p class="subtitle" id="form-subtitle">Welcome back — enter your credentials</p>
+
+    <!-- ⚠️ Remove this block once you add your Firebase config below -->
+    <div class="notice" id="config-notice">
+      <strong>⚠️ Firebase config missing</strong>
+      Open this file and replace the placeholder values inside
+      <code>firebaseConfig</code> with your credentials from the
+      <a href="https://console.firebase.google.com" target="_blank">Firebase console</a>.
+      Also enable <strong>Email/Password</strong> and <strong>Google</strong>
+      under Authentication → Sign-in method.
+    </div>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+
+    <div class="error" id="error-box"></div>
+
+    <button class="btn btn-primary" id="submit-btn" onclick="handleSubmit()">
+      <span class="spinner" id="spinner"></span>
+      <span id="btn-label">Sign in</span>
+    </button>
+
+    <div class="divider">or</div>
+
+    <button class="btn btn-google" onclick="handleGoogle()">
+      <!-- Google logo SVG -->
+      <svg class="google-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <div class="toggle" id="toggle-link">
+      No account? <a onclick="toggleMode()">Create one</a>
+    </div>
+  </div>
+
+  <!-- ─── Signed-in dashboard ─── -->
+  <div id="dashboard">
+    <div class="avatar" id="avatar"></div>
+    <div class="user-name" id="dash-name"></div>
+    <div class="user-email" id="dash-email"></div>
+    <div class="info-box">
+      <div class="info-row">
+        <span class="info-label">Provider</span>
+        <span class="info-value" id="dash-provider"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">UID</span>
+        <span class="info-value" id="dash-uid"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email verified</span>
+        <span class="info-value" id="dash-verified"></span>
+      </div>
+    </div>
+    <button class="btn btn-danger" onclick="handleLogout()">Sign out</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     FIREBASE CONFIGURATION
+     Replace every "YOUR_*" value with your project's config.
+     Get it from: Firebase Console → Project settings → Your apps
+     ═══════════════════════════════════════════════════════ -->
+<script type="module">
+  import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  // ── 🔧 REPLACE THESE VALUES ──────────────────────────────
+  const firebaseConfig = {
+  apiKey: "AIzaSyCX9MDc9di2lLcidm1t2rhQxEnAEeC0ho0",
+  authDomain: "softwareenggineering.firebaseapp.com",
+  projectId: "softwareenggineering",
+  storageBucket: "softwareenggineering.firebasestorage.app",
+  messagingSenderId: "203713922683",
+  appId: "1:203713922683:web:4bc8d150ba18cb294f84de",
+  measurementId: "G-R28S59DZG0"
+};
+  // ─────────────────────────────────────────────────────────
+
+  const configured = !firebaseConfig.apiKey.includes("YOUR_");
+  if (configured) {
+    document.getElementById("config-notice").style.display = "none";
+  }
+
+  const app      = configured ? initializeApp(firebaseConfig) : null;
+  const auth     = configured ? getAuth(app) : null;
+  const provider = configured ? new GoogleAuthProvider() : null;
+
+  // Watch auth state
+  if (auth) {
+    onAuthStateChanged(auth, user => {
+      user ? renderDashboard(user) : renderLogin();
+    });
+  }
+
+  // ── State ──
+  let isSignUp = false;
+
+  // ── Toggle login ↔ register ──
+  window.toggleMode = () => {
+    isSignUp = !isSignUp;
+    document.getElementById("form-title").textContent    = isSignUp ? "Create account" : "Sign in";
+    document.getElementById("form-subtitle").textContent = isSignUp ? "Fill in your details to get started" : "Welcome back — enter your credentials";
+    document.getElementById("btn-label").textContent     = isSignUp ? "Create account" : "Sign in";
+    document.getElementById("toggle-link").innerHTML     = isSignUp
+      ? 'Have an account? <a onclick="toggleMode()">Sign in</a>'
+      : 'No account? <a onclick="toggleMode()">Create one</a>';
+    clearError();
+  };
+
+  // ── Email / Password submit ──
+  window.handleSubmit = async () => {
+    if (!configured) { showError("Add your Firebase config first."); return; }
+    const email    = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    if (!email || !password) { showError("Enter your email and password."); return; }
+
+    setLoading(true);
+    try {
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+    } catch (e) {
+      showError(friendlyError(e.code));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Google sign-in ──
+  window.handleGoogle = async () => {
+    if (!configured) { showError("Add your Firebase config first."); return; }
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (e) {
+      if (e.code !== "auth/popup-closed-by-user") showError(friendlyError(e.code));
+    }
+  };
+
+  // ── Sign out ──
+  window.handleLogout = async () => {
+    if (auth) await signOut(auth);
+  };
+
+  // ── UI helpers ──
+  function renderDashboard(user) {
+    document.getElementById("auth-panel").style.display  = "none";
+    document.getElementById("dashboard").style.display   = "block";
+
+    const name = user.displayName || user.email?.split("@")[0] || "User";
+    document.getElementById("dash-name").textContent  = `Hi, ${name} 👋`;
+    document.getElementById("dash-email").textContent = user.email || "";
+    document.getElementById("dash-uid").textContent   = user.uid.slice(0, 14) + "…";
+    document.getElementById("dash-verified").textContent =
+      user.emailVerified ? "✅ Yes" : "❌ No";
+
+    const providers = user.providerData
+      .map(p => p.providerId === "password" ? "Email / Password" : "Google")
+      .join(", ");
+    document.getElementById("dash-provider").textContent = providers;
+
+    const av = document.getElementById("avatar");
+    av.innerHTML = user.photoURL
+      ? `<img src="${user.photoURL}" alt="avatar" />`
+      : name.charAt(0).toUpperCase();
+  }
+
+  function renderLogin() {
+    document.getElementById("dashboard").style.display   = "none";
+    document.getElementById("auth-panel").style.display  = "block";
+    document.getElementById("email").value    = "";
+    document.getElementById("password").value = "";
+    clearError();
+  }
+
+  function setLoading(on) {
+    document.getElementById("spinner").style.display    = on ? "block" : "none";
+    document.getElementById("submit-btn").disabled      = on;
+    document.getElementById("btn-label").textContent    =
+      on ? "" : (isSignUp ? "Create account" : "Sign in");
+  }
+
+  function showError(msg) {
+    const box = document.getElementById("error-box");
+    box.textContent = msg;
+    box.style.display = "block";
+  }
+
+  function clearError() {
+    document.getElementById("error-box").style.display = "none";
+  }
+
+  function friendlyError(code) {
+    const map = {
+      "auth/invalid-credential":       "Email or password is incorrect.",
+      "auth/user-not-found":           "No account found with that email.",
+      "auth/wrong-password":           "Incorrect password.",
+      "auth/email-already-in-use":     "An account with this email already exists.",
+      "auth/weak-password":            "Password must be at least 6 characters.",
+      "auth/invalid-email":            "Enter a valid email address.",
+      "auth/too-many-requests":        "Too many attempts. Try again later.",
+      "auth/network-request-failed":   "Check your connection and try again.",
+      "auth/popup-blocked":            "Allow popups for this site and try again.",
+    };
+    return map[code] || `Something went wrong (${code}). Please try again.`;
+  }
+</script>
+
+</body>
+</html>
